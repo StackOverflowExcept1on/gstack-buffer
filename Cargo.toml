@@ -1,0 +1,16 @@
+[package]
+name = "gstack-buffer"
+version = "0.1.0"
+authors = ["StackOverflowExcept1on"]
+edition = "2021"
+description = "Library to use stack allocation for WebAssembly target"
+repository = "https://github.com/StackOverflowExcept1on/gstack-buffer"
+license = "MIT"
+keywords = ["stack", "stack-allocation"]
+categories = ["api-bindings", "no-std"]
+
+[features]
+alloc = []
+
+[profile.release]
+lto = "fat"
