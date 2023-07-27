@@ -13,7 +13,7 @@ const MAX_BUFFER_SIZE: usize = 64 * 1024;
 type Callback = unsafe extern "C" fn(ptr: *mut MaybeUninit<u8>, data: *mut c_void);
 
 #[cfg(any(
-    all(feature = "compile-alloca"),
+    feature = "compile-alloca",
     all(not(feature = "compile-alloca"), target_arch = "wasm32")
 ))]
 extern "C" {
