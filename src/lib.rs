@@ -12,12 +12,15 @@ const MAX_BUFFER_SIZE: usize = 64 * 1024;
 
 type Callback = unsafe extern "C" fn(ptr: *mut MaybeUninit<u8>, data: *mut c_void);
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(
+    all(feature = "compile-alloca"),
+    all(not(feature = "compile-alloca"), target_arch = "wasm32")
+))]
 extern "C" {
     fn c_with_alloca(size: usize, callback: Callback, data: *mut c_void);
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(feature = "compile-alloca"), not(target_arch = "wasm32")))]
 unsafe extern "C" fn c_with_alloca(_size: usize, callback: Callback, data: *mut c_void) {
     let mut buffer = MaybeUninit::<[MaybeUninit<u8>; MAX_BUFFER_SIZE]>::uninit().assume_init();
     callback(buffer.as_mut_ptr(), data);

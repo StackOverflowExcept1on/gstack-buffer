@@ -9,5 +9,12 @@ license = "MIT"
 keywords = ["stack", "stack-allocation"]
 categories = ["api-bindings", "no-std"]
 
+[build-dependencies]
+cc = { version = "1.0", optional = true }
+
+[features]
+compile-alloca = ["cc"]
+stack-clash-protection = []
+
 [profile.release]
 lto = "fat"
