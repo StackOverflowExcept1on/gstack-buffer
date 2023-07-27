@@ -9,8 +9,5 @@ license = "MIT"
 keywords = ["stack", "stack-allocation"]
 categories = ["api-bindings", "no-std"]
 
-[features]
-alloc = []
-
 [profile.release]
 lto = "fat"
