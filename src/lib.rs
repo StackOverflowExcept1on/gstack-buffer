@@ -26,20 +26,20 @@ unsafe extern "C" fn c_with_alloca(_size: usize, callback: Callback, data: *mut 
     callback(buffer.as_mut_ptr(), data);
 }
 
+#[inline(always)]
+fn get_trampoline<F: FnMut(*mut MaybeUninit<u8>)>(_closure: &F) -> Callback {
+    trampoline::<F>
+}
+
+unsafe extern "C" fn trampoline<F: FnMut(*mut MaybeUninit<u8>)>(
+    ptr: *mut MaybeUninit<u8>,
+    data: *mut c_void,
+) {
+    let f = &mut *(data as *mut F);
+    f(ptr);
+}
+
 fn with_alloca<T>(size: usize, f: impl FnOnce(&mut [MaybeUninit<u8>]) -> T) -> T {
-    #[inline(always)]
-    fn get_trampoline<F: FnMut(*mut MaybeUninit<u8>)>(_closure: &F) -> Callback {
-        trampoline::<F>
-    }
-
-    unsafe extern "C" fn trampoline<F: FnMut(*mut MaybeUninit<u8>)>(
-        ptr: *mut MaybeUninit<u8>,
-        data: *mut c_void,
-    ) {
-        let f = &mut *(data as *mut F);
-        f(ptr);
-    }
-
     let mut f = ManuallyDrop::new(f);
     let mut ret = MaybeUninit::uninit();
 
