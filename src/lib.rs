@@ -5,9 +5,11 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 
-use core::ffi::c_void;
-use core::mem::{ManuallyDrop, MaybeUninit};
-use core::slice::from_raw_parts_mut;
+use core::{
+    ffi::c_void,
+    mem::{ManuallyDrop, MaybeUninit},
+    slice,
+};
 
 const MAX_BUFFER_SIZE: usize = 64 * 1024;
 
@@ -45,7 +47,7 @@ fn with_alloca<T>(size: usize, f: impl FnOnce(&mut [MaybeUninit<u8>]) -> T) -> T
     let mut ret = MaybeUninit::uninit();
 
     let mut closure = |ptr| unsafe {
-        let slice = from_raw_parts_mut(ptr, size);
+        let slice = slice::from_raw_parts_mut(ptr, size);
         ret.write(ManuallyDrop::take(&mut f)(slice));
     };
 
