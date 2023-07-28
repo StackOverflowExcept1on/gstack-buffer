@@ -1,3 +1,5 @@
+#![feature(c_unwind)]
+
 #![no_std]
 
 extern crate alloc;
@@ -10,7 +12,7 @@ use core::slice::from_raw_parts_mut;
 
 const MAX_BUFFER_SIZE: usize = 64 * 1024;
 
-type Callback = unsafe extern "C" fn(ptr: *mut MaybeUninit<u8>, data: *mut c_void);
+type Callback = unsafe extern "C-unwind" fn(ptr: *mut MaybeUninit<u8>, data: *mut c_void);
 
 #[cfg(any(
     feature = "compile-alloca",
@@ -31,7 +33,7 @@ fn get_trampoline<F: FnMut(*mut MaybeUninit<u8>)>(_closure: &F) -> Callback {
     trampoline::<F>
 }
 
-unsafe extern "C" fn trampoline<F: FnMut(*mut MaybeUninit<u8>)>(
+unsafe extern "C-unwind" fn trampoline<F: FnMut(*mut MaybeUninit<u8>)>(
     ptr: *mut MaybeUninit<u8>,
     data: *mut c_void,
 ) {
