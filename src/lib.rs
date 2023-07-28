@@ -30,31 +30,31 @@ unsafe extern "C" fn c_with_alloca(_size: usize, callback: Callback, data: *mut 
 }
 
 #[inline(always)]
-fn get_trampoline<F: FnMut(*mut MaybeUninit<u8>)>(_closure: &F) -> Callback {
+fn get_trampoline<F: FnOnce(*mut MaybeUninit<u8>)>(_closure: &F) -> Callback {
     trampoline::<F>
 }
 
-unsafe extern "C-unwind" fn trampoline<F: FnMut(*mut MaybeUninit<u8>)>(
+unsafe extern "C-unwind" fn trampoline<F: FnOnce(*mut MaybeUninit<u8>)>(
     ptr: *mut MaybeUninit<u8>,
     data: *mut c_void,
 ) {
-    let f = &mut *(data as *mut F);
+    let f = ManuallyDrop::take(&mut *(data as *mut ManuallyDrop<F>));
     f(ptr);
 }
 
 fn with_alloca<T>(size: usize, f: impl FnOnce(&mut [MaybeUninit<u8>]) -> T) -> T {
-    let mut f = ManuallyDrop::new(f);
     let mut ret = MaybeUninit::uninit();
 
-    let mut closure = |ptr| unsafe {
-        let slice = slice::from_raw_parts_mut(ptr, size);
-        ret.write(ManuallyDrop::take(&mut f)(slice));
+    let closure = |ptr| {
+        let slice = unsafe { slice::from_raw_parts_mut(ptr, size) };
+        ret.write(f(slice));
     };
 
     let trampoline = get_trampoline(&closure);
+    let mut closure_data = ManuallyDrop::new(closure);
 
     unsafe {
-        c_with_alloca(size, trampoline, &mut closure as *mut _ as *mut c_void);
+        c_with_alloca(size, trampoline, &mut closure_data as *mut _ as *mut c_void);
         ret.assume_init()
     }
 }
